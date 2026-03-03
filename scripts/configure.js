@@ -105,6 +105,27 @@ if (config.gateway.bind === undefined) {
   config.gateway.bind = process.env.OPENCLAW_GATEWAY_BIND || "loopback";
 }
 
+// Trusted reverse proxies: default for in-container nginx -> gateway hops.
+if (!Array.isArray(config.gateway.trustedProxies) || config.gateway.trustedProxies.length === 0) {
+  config.gateway.trustedProxies = ["127.0.0.1/32"];
+}
+
+// Trusted reverse proxies (CIDR list, comma-separated)
+if (process.env.GATEWAY_TRUSTED_PROXIES) {
+  config.gateway.trustedProxies = process.env.GATEWAY_TRUSTED_PROXIES
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+// Allowed origins for Control UI / WebSocket checks (comma-separated)
+if (process.env.GATEWAY_ALLOWED_ORIGINS) {
+  config.gateway.controlUi.allowedOrigins = process.env.GATEWAY_ALLOWED_ORIGINS
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
 // ── Agents defaults ─────────────────────────────────────────────────────────
 
 ensure(config, "agents", "defaults");
