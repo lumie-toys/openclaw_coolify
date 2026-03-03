@@ -63,10 +63,27 @@ if [ -n "${OPENCLAW_DOCKER_APT_PACKAGES:-}" ]; then
     && rm -rf /var/lib/apt/lists/*
 fi
 
-# ── Require OPENCLAW_GATEWAY_TOKEN ───────────────────────────────────────────
+# ── Gateway token (required; can auto-generate/persist for local) ───────────
+mkdir -p "$STATE_DIR"
+GATEWAY_TOKEN_FILE="$STATE_DIR/gateway.token"
+OPENCLAW_GATEWAY_TOKEN_AUTO_GENERATE="${OPENCLAW_GATEWAY_TOKEN_AUTO_GENERATE:-false}"
+
+if [ -z "${OPENCLAW_GATEWAY_TOKEN:-}" ] && [ "$OPENCLAW_GATEWAY_TOKEN_AUTO_GENERATE" = "true" ]; then
+  if [ -s "$GATEWAY_TOKEN_FILE" ]; then
+    OPENCLAW_GATEWAY_TOKEN="$(tr -d '\r\n' < "$GATEWAY_TOKEN_FILE")"
+    echo "[entrypoint] using persisted OPENCLAW_GATEWAY_TOKEN from $GATEWAY_TOKEN_FILE"
+  else
+    OPENCLAW_GATEWAY_TOKEN="$(openssl rand -hex 32)"
+    printf '%s\n' "$OPENCLAW_GATEWAY_TOKEN" > "$GATEWAY_TOKEN_FILE"
+    chmod 600 "$GATEWAY_TOKEN_FILE"
+    echo "[entrypoint] auto-generated OPENCLAW_GATEWAY_TOKEN and persisted to $GATEWAY_TOKEN_FILE"
+  fi
+fi
+
 if [ -z "${OPENCLAW_GATEWAY_TOKEN:-}" ]; then
   echo "[entrypoint] ERROR: OPENCLAW_GATEWAY_TOKEN is required."
   echo "[entrypoint] Generate one with: openssl rand -hex 32"
+  echo "[entrypoint] Or enable auto generation: OPENCLAW_GATEWAY_TOKEN_AUTO_GENERATE=true"
   exit 1
 fi
 GATEWAY_TOKEN="$OPENCLAW_GATEWAY_TOKEN"
@@ -146,6 +163,37 @@ fi
 AUTH_PASSWORD="${AUTH_PASSWORD:-}"
 AUTH_USERNAME="${AUTH_USERNAME:-admin}"
 NGINX_CONF="/etc/nginx/conf.d/openclaw.conf"
+AUTH_AUTO_GENERATE="${AUTH_AUTO_GENERATE:-false}"
+WEB_AUTH_FILE="$STATE_DIR/web-auth.env"
+
+# Local/dev convenience: auto-generate basic auth credentials when enabled.
+# Coolify can still supply explicit AUTH_USERNAME/AUTH_PASSWORD via env vars.
+if [ -z "$AUTH_PASSWORD" ] && [ "$AUTH_AUTO_GENERATE" = "true" ]; then
+  if [ -f "$WEB_AUTH_FILE" ]; then
+    PERSISTED_USERNAME="$(sed -n 's/^AUTH_USERNAME=//p' "$WEB_AUTH_FILE" | head -n 1)"
+    PERSISTED_PASSWORD="$(sed -n 's/^AUTH_PASSWORD=//p' "$WEB_AUTH_FILE" | head -n 1)"
+
+    if [ -n "$PERSISTED_USERNAME" ] && [ -n "$PERSISTED_PASSWORD" ]; then
+      AUTH_USERNAME="$PERSISTED_USERNAME"
+      AUTH_PASSWORD="$PERSISTED_PASSWORD"
+      echo "[entrypoint] using persisted auto-generated web auth credentials from $WEB_AUTH_FILE"
+    fi
+  fi
+
+  if [ -z "$AUTH_PASSWORD" ]; then
+    AUTH_USERNAME="${AUTH_USERNAME:-admin}"
+    AUTH_PASSWORD="$(openssl rand -base64 24 | tr -d '\r\n')"
+    cat > "$WEB_AUTH_FILE" <<EOF
+AUTH_USERNAME=$AUTH_USERNAME
+AUTH_PASSWORD=$AUTH_PASSWORD
+EOF
+    chmod 600 "$WEB_AUTH_FILE"
+    echo "[entrypoint] auto-generated web login credentials:"
+    echo "[entrypoint]   username: $AUTH_USERNAME"
+    echo "[entrypoint]   password: $AUTH_PASSWORD"
+    echo "[entrypoint] persisted at: $WEB_AUTH_FILE"
+  fi
+fi
 
 AUTH_BLOCK=""
 if [ -n "$AUTH_PASSWORD" ]; then
