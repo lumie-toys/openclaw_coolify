@@ -6,21 +6,19 @@
 #   ./scripts/build.sh base             # build base only
 #   ./scripts/build.sh final            # build final only (requires base)
 #   ./scripts/build.sh browser          # build browser sidecar only
-#   OPENCLAW_GIT_REF=v2026.1.29 ./scripts/build.sh  # pin to a specific version
+#   # Source is read from local ./openclaw submodule
 
 set -euo pipefail
 
-OPENCLAW_GIT_REF="${OPENCLAW_GIT_REF:-main}"
 BASE_TAG="openclaw-base:local"
 FINAL_TAG="openclaw:local"
 BROWSER_TAG="openclaw-browser:local"
 TARGET="${1:-all}"
 
 build_base() {
-  echo "==> Building base image (ref: ${OPENCLAW_GIT_REF})..."
+  echo "==> Building base image (source: ./openclaw)..."
   docker build \
     -f Dockerfile.base \
-    --build-arg "OPENCLAW_GIT_REF=${OPENCLAW_GIT_REF}" \
     -t "${BASE_TAG}" \
     .
   echo "==> Base image built: ${BASE_TAG}"

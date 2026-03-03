@@ -1,9 +1,9 @@
 services:
   openclaw:
     image: openclaw:local
-    build:
-      context: .
-      dockerfile: Dockerfile
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
     expose:
       - "8080"
     environment:
@@ -18,7 +18,7 @@ services:
       - AUTH_USERNAME=${SERVICE_USER_OPENCLAW:-admin}
       - AUTH_PASSWORD=${SERVICE_PASSWORD_OPENCLAW:-}
       - AUTH_AUTO_GENERATE=${AUTH_AUTO_GENERATE:-true}
-      - OPENCLAW_GATEWAY_TOKEN=${SERVICE_PASSWORD_OPENCLAW_GATEWAY}
+      - OPENCLAW_GATEWAY_TOKEN=${SERVICE_PASSWORD_OPENCLAW_GATEWAY:-${SERVICE_PASSWORD_OPENCLAW:-}}
       - GATEWAY_TRUSTED_PROXIES=127.0.0.1/32
       - GATEWAY_ALLOWED_ORIGINS=*
       # Browser sidecar
@@ -36,9 +36,9 @@ services:
 
   browser:
     image: openclaw-browser:local
-    build:
-      context: .
-      dockerfile: Dockerfile.browser
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile.browser
     expose:
       - "3000"
       - "9223"

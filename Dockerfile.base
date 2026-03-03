@@ -1,4 +1,4 @@
-# Build openclaw from source (some dist files are not shipped via npm).
+# Build openclaw from local source (./openclaw submodule).
 FROM node:22-bookworm AS openclaw-build
 
 RUN apt-get update \
@@ -17,9 +17,8 @@ ENV PATH="/root/.bun/bin:${PATH}"
 RUN corepack enable
 
 WORKDIR /openclaw
-
-ARG OPENCLAW_GIT_REF=main
-RUN git clone --depth 1 --branch "${OPENCLAW_GIT_REF}" https://github.com/openclaw/openclaw.git .
+COPY openclaw/ /openclaw/
+RUN rm -rf .git .gitmodules
 
 # Patch: relax version requirements for packages using workspace protocol.
 RUN set -eux; \

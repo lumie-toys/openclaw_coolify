@@ -67,6 +67,15 @@ fi
 mkdir -p "$STATE_DIR"
 
 if [ -z "${OPENCLAW_GATEWAY_TOKEN:-}" ]; then
+  # Coolify commonly auto-generates SERVICE_PASSWORD_OPENCLAW (used by AUTH_PASSWORD).
+  # If a dedicated gateway secret is not present yet, reuse AUTH_PASSWORD so first boot succeeds.
+  if [ -n "${AUTH_PASSWORD:-}" ]; then
+    OPENCLAW_GATEWAY_TOKEN="$AUTH_PASSWORD"
+    echo "[entrypoint] OPENCLAW_GATEWAY_TOKEN not set, falling back to AUTH_PASSWORD."
+  fi
+fi
+
+if [ -z "${OPENCLAW_GATEWAY_TOKEN:-}" ]; then
   echo "[entrypoint] ERROR: OPENCLAW_GATEWAY_TOKEN is required."
   echo "[entrypoint] In Coolify, set SERVICE_PASSWORD_OPENCLAW_GATEWAY and map it to OPENCLAW_GATEWAY_TOKEN."
   exit 1
