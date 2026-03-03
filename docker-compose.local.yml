@@ -1,10 +1,14 @@
 services:
   openclaw:
     image: openclaw:local
+    build:
+      context: .
+      dockerfile: Dockerfile
     environment:
       # Provider (at least one required)
       - OPENCODE_API_KEY=${OPENCODE_API_KEY}
       - OPENCLAW_PRIMARY_MODEL=opencode/kimi-k2.5
+      - OLLAMA_BASE_URL=http://100.98.78.106:8000/v1
       # Auth
       - AUTH_USERNAME=${AUTH_USERNAME:-admin}
       - AUTH_PASSWORD=${AUTH_PASSWORD:-}
@@ -24,6 +28,9 @@ services:
 
   browser:
     image: openclaw-browser:local
+    build:
+      context: .
+      dockerfile: Dockerfile.browser
     environment:
       - PUID=1000
       - PGID=1000
