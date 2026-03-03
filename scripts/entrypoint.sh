@@ -63,27 +63,12 @@ if [ -n "${OPENCLAW_DOCKER_APT_PACKAGES:-}" ]; then
     && rm -rf /var/lib/apt/lists/*
 fi
 
-# ── Gateway token (required; can auto-generate/persist for local) ───────────
+# ── Gateway token (required; managed by env/Coolify) ────────────────────────
 mkdir -p "$STATE_DIR"
-GATEWAY_TOKEN_FILE="$STATE_DIR/gateway.token"
-OPENCLAW_GATEWAY_TOKEN_AUTO_GENERATE="${OPENCLAW_GATEWAY_TOKEN_AUTO_GENERATE:-false}"
-
-if [ -z "${OPENCLAW_GATEWAY_TOKEN:-}" ] && [ "$OPENCLAW_GATEWAY_TOKEN_AUTO_GENERATE" = "true" ]; then
-  if [ -s "$GATEWAY_TOKEN_FILE" ]; then
-    OPENCLAW_GATEWAY_TOKEN="$(tr -d '\r\n' < "$GATEWAY_TOKEN_FILE")"
-    echo "[entrypoint] using persisted OPENCLAW_GATEWAY_TOKEN from $GATEWAY_TOKEN_FILE"
-  else
-    OPENCLAW_GATEWAY_TOKEN="$(openssl rand -hex 32)"
-    printf '%s\n' "$OPENCLAW_GATEWAY_TOKEN" > "$GATEWAY_TOKEN_FILE"
-    chmod 600 "$GATEWAY_TOKEN_FILE"
-    echo "[entrypoint] auto-generated OPENCLAW_GATEWAY_TOKEN and persisted to $GATEWAY_TOKEN_FILE"
-  fi
-fi
 
 if [ -z "${OPENCLAW_GATEWAY_TOKEN:-}" ]; then
   echo "[entrypoint] ERROR: OPENCLAW_GATEWAY_TOKEN is required."
-  echo "[entrypoint] Generate one with: openssl rand -hex 32"
-  echo "[entrypoint] Or enable auto generation: OPENCLAW_GATEWAY_TOKEN_AUTO_GENERATE=true"
+  echo "[entrypoint] In Coolify, set SERVICE_PASSWORD_OPENCLAW_GATEWAY and map it to OPENCLAW_GATEWAY_TOKEN."
   exit 1
 fi
 GATEWAY_TOKEN="$OPENCLAW_GATEWAY_TOKEN"

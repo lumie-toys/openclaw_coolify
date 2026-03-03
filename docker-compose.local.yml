@@ -19,13 +19,14 @@ services:
       - AUTH_PASSWORD=${SERVICE_PASSWORD_OPENCLAW:-}
       - AUTH_AUTO_GENERATE=${AUTH_AUTO_GENERATE:-true}
       - OPENCLAW_GATEWAY_TOKEN=${SERVICE_PASSWORD_OPENCLAW_GATEWAY}
-      - OPENCLAW_GATEWAY_TOKEN_AUTO_GENERATE=${OPENCLAW_GATEWAY_TOKEN_AUTO_GENERATE:-false}
       - GATEWAY_TRUSTED_PROXIES=127.0.0.1/32
       - GATEWAY_ALLOWED_ORIGINS=*
       # Browser sidecar
       - BROWSER_CDP_URL=http://browser:9223
       - BROWSER_DEFAULT_PROFILE=openclaw
       - BROWSER_EVALUATE_ENABLED=true
+      # dummy config
+      - VLLM_API_KEY=aaa
     volumes:
       - openclaw-data:/data
       - ./my-openclaw.json:/app/config/openclaw.json:ro
