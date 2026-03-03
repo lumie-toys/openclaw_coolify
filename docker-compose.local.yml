@@ -9,7 +9,7 @@ services:
     environment:
       # Provider (at least one required)
       - OPENCODE_API_KEY=${OPENCODE_API_KEY}
-      - OPENCLAW_PRIMARY_MODEL=opencode/kimi-k2.5
+      - OPENCLAW_PRIMARY_MODEL=vllm/qwen35-moe
       - OLLAMA_BASE_URL=http://100.98.78.106:8000/v1
       - OPENCLAW_STATE_DIR=/data/.openclaw
       - OPENCLAW_WORKSPACE_DIR=/data/workspace
