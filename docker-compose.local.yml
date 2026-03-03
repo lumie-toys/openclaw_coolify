@@ -15,6 +15,7 @@ services:
       - BROWSER_EVALUATE_ENABLED=true
     volumes:
       - openclaw-data:/data
+      - ./my-openclaw.json:/app/config/openclaw.json:ro
     depends_on:
       - browser
     restart: unless-stopped
