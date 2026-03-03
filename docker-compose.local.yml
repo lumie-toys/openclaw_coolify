@@ -18,9 +18,8 @@ services:
       - AUTH_USERNAME=${SERVICE_USER_OPENCLAW:-admin}
       - AUTH_PASSWORD=${SERVICE_PASSWORD_OPENCLAW:-}
       - AUTH_AUTO_GENERATE=${AUTH_AUTO_GENERATE:-true}
-      # Explicitly declare magic var so Coolify can generate it reliably.
-      - SERVICE_PASSWORD_OPENCLAW_GATEWAY=${SERVICE_PASSWORD_OPENCLAW_GATEWAY}
-      - OPENCLAW_GATEWAY_TOKEN=${SERVICE_PASSWORD_OPENCLAW_GATEWAY}
+      # Reuse the reliably auto-generated service password for gateway token.
+      - OPENCLAW_GATEWAY_TOKEN=${SERVICE_PASSWORD_OPENCLAW}
       - GATEWAY_TRUSTED_PROXIES=127.0.0.1/32
       - GATEWAY_ALLOWED_ORIGINS=*
       # Browser sidecar
