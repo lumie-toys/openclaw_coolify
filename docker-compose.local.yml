@@ -4,6 +4,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    expose:
+      - "8080"
     environment:
       # Provider (at least one required)
       - OPENCODE_API_KEY=${OPENCODE_API_KEY}
@@ -31,6 +33,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.browser
+    expose:
+      - "3000"
+      - "9223"
     environment:
       - PUID=1000
       - PGID=1000
