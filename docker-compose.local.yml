@@ -1,48 +1,28 @@
 services:
   openclaw:
     image: openclaw:local
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile
     expose:
       - "8080"
     environment:
       # Provider (at least one required)
       - OPENCODE_API_KEY=${OPENCODE_API_KEY}
       - OPENCLAW_PRIMARY_MODEL=vllm/qwen35-moe
-      - OLLAMA_BASE_URL=http://100.98.78.106:8000/v1
-      - OPENCLAW_STATE_DIR=/data/.openclaw
-      - OPENCLAW_WORKSPACE_DIR=/data/workspace
-      - OPENCLAW_CONFIG_PATH=/data/.openclaw/openclaw.json
       # Auth
-      - AUTH_USERNAME=${SERVICE_USER_OPENCLAW:-admin}
-      - AUTH_PASSWORD=${SERVICE_PASSWORD_OPENCLAW:-}
-      - AUTH_AUTO_GENERATE=${AUTH_AUTO_GENERATE:-true}
-      # Reuse the reliably auto-generated service password for gateway token.
-      - OPENCLAW_GATEWAY_TOKEN=${SERVICE_PASSWORD_OPENCLAW}
-      - GATEWAY_TRUSTED_PROXIES=127.0.0.1/32
-      - GATEWAY_ALLOWED_ORIGINS=*
+      - AUTH_USERNAME=${AUTH_USERNAME:-admin}
+      - AUTH_PASSWORD=${AUTH_PASSWORD}
+      - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN}
       # Browser sidecar
       - BROWSER_CDP_URL=http://browser:9223
       - BROWSER_DEFAULT_PROFILE=openclaw
       - BROWSER_EVALUATE_ENABLED=true
-      # dummy config
-      - VLLM_API_KEY=aaa
     volumes:
       - openclaw-data:/data
-      - ./my-openclaw.json:/app/config/openclaw.json:ro
     depends_on:
       - browser
     restart: unless-stopped
 
   browser:
     image: openclaw-browser:local
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile.browser
-    expose:
-      - "3000"
-      - "9223"
     environment:
       - PUID=1000
       - PGID=1000
