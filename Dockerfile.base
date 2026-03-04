@@ -53,7 +53,13 @@ RUN useradd -m -s /bin/bash linuxbrew \
   && mkdir -p /home/linuxbrew/.linuxbrew \
   && chown -R linuxbrew:linuxbrew /home/linuxbrew
 USER linuxbrew
-RUN NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+RUN set -eux; \
+  curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh -o /tmp/brew-install.sh; \
+  # Homebrew installer does a forced update at the end, which is flaky in CI/Docker builds.
+  # Skip that update step; brew remains installed and usable.
+  sed -i 's#^\(\s*\)/home/linuxbrew/.linuxbrew/bin/brew update --force --quiet$#\1true#' /tmp/brew-install.sh; \
+  NONINTERACTIVE=1 /bin/bash /tmp/brew-install.sh; \
+  test -x /home/linuxbrew/.linuxbrew/bin/brew
 USER root
 RUN chmod -R a+rx /home/linuxbrew/.linuxbrew
 ENV HOMEBREW_PREFIX="/home/linuxbrew/.linuxbrew" \
