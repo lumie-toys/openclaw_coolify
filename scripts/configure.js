@@ -99,6 +99,9 @@ if (config.gateway.controlUi.allowInsecureAuth === undefined) {
 if (config.gateway.controlUi.enabled === undefined) {
   config.gateway.controlUi.enabled = true;
 }
+if (process.env.OPENCLAW_DISABLE_DEVICE_AUTH === "true") {
+  config.gateway.controlUi.dangerouslyDisableDeviceAuth = true;
+}
 
 // Bind address (all gateway config comes from openclaw.json; "gateway run" reads it)
 if (config.gateway.bind === undefined) {
