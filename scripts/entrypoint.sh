@@ -63,10 +63,16 @@ if [ -n "${OPENCLAW_DOCKER_APT_PACKAGES:-}" ]; then
     && rm -rf /var/lib/apt/lists/*
 fi
 
-# ── Require OPENCLAW_GATEWAY_TOKEN ───────────────────────────────────────────
+# ── Resolve/require OPENCLAW_GATEWAY_TOKEN ──────────────────────────────────
+# Coolify magic vars may be available directly as SERVICE_PASSWORD_64_GATEWAY.
+# If OPENCLAW_GATEWAY_TOKEN mapping is empty, fall back to that generated value.
+OPENCLAW_GATEWAY_TOKEN="${OPENCLAW_GATEWAY_TOKEN:-${SERVICE_PASSWORD_64_GATEWAY:-}}"
+export OPENCLAW_GATEWAY_TOKEN
+
 if [ -z "${OPENCLAW_GATEWAY_TOKEN:-}" ]; then
   echo "[entrypoint] ERROR: OPENCLAW_GATEWAY_TOKEN is required."
   echo "[entrypoint] Generate one with: openssl rand -hex 32"
+  echo "[entrypoint] Or provide Coolify magic var SERVICE_PASSWORD_64_GATEWAY."
   exit 1
 fi
 GATEWAY_TOKEN="$OPENCLAW_GATEWAY_TOKEN"
@@ -159,7 +165,7 @@ if [ -n "$HOOKS_PATH" ]; then
 fi
 
 # ── Generate nginx config ────────────────────────────────────────────────────
-AUTH_PASSWORD="${AUTH_PASSWORD:-}"
+AUTH_PASSWORD="${AUTH_PASSWORD:-${SERVICE_PASSWORD_AUTH:-}}"
 AUTH_USERNAME="${AUTH_USERNAME:-admin}"
 NGINX_CONF="/etc/nginx/conf.d/openclaw.conf"
 
