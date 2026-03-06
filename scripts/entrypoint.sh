@@ -83,6 +83,21 @@ for key in ANTHROPIC_API_KEY OPENAI_API_KEY OPENROUTER_API_KEY GEMINI_API_KEY \
 done
 [ -n "${AWS_ACCESS_KEY_ID:-}" ] && [ -n "${AWS_SECRET_ACCESS_KEY:-}" ] && HAS_PROVIDER=1
 [ -n "${OLLAMA_BASE_URL:-}" ] && HAS_PROVIDER=1
+
+# Also accept providers defined in custom JSON config (e.g. mounted my-openclaw.json).
+CUSTOM_CFG="${OPENCLAW_CUSTOM_CONFIG:-/app/config/openclaw.json}"
+if [ "$HAS_PROVIDER" -eq 0 ] && [ -f "$CUSTOM_CFG" ]; then
+  if node -e "
+    const fs = require('fs');
+    const c = JSON.parse(fs.readFileSync(process.argv[1], 'utf8'));
+    const p = c && c.models && c.models.providers;
+    process.exit(p && typeof p === 'object' && Object.keys(p).length > 0 ? 0 : 1);
+  " "$CUSTOM_CFG" 2>/dev/null; then
+    HAS_PROVIDER=1
+    echo "[entrypoint] found providers in custom config: $CUSTOM_CFG"
+  fi
+fi
+
 if [ "$HAS_PROVIDER" -eq 0 ]; then
   echo "[entrypoint] ERROR: At least one AI provider API key env var is required."
   echo "[entrypoint] Providers read API keys from env vars, never from the JSON config."
@@ -91,6 +106,7 @@ if [ "$HAS_PROVIDER" -eq 0 ]; then
   echo "[entrypoint]   MOONSHOT_API_KEY, KIMI_API_KEY, MINIMAX_API_KEY, ZAI_API_KEY, AI_GATEWAY_API_KEY,"
   echo "[entrypoint]   OPENCODE_API_KEY, SYNTHETIC_API_KEY, COPILOT_GITHUB_TOKEN, XIAOMI_API_KEY"
   echo "[entrypoint] Or: AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY (Bedrock), OLLAMA_BASE_URL (local)"
+  echo "[entrypoint] Or define providers in OPENCLAW_CUSTOM_CONFIG (default: /app/config/openclaw.json)"
   exit 1
 fi
 
