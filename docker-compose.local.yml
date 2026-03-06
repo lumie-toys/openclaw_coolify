@@ -7,6 +7,7 @@ services:
       # Provider (at least one required)
       - OPENCODE_API_KEY=${OPENCODE_API_KEY:?}
       - OPENCLAW_PRIMARY_MODEL=vllm/qwen35-moe
+      - COOLIFY_FQDN=${SERVICE_FQDN_OPENCLAW}
       # Auth
       - AUTH_USERNAME=${AUTH_USERNAME:-admin}
       - AUTH_PASSWORD=${SERVICE_PASSWORD_AUTH}
