@@ -270,11 +270,17 @@ server {
 
     ${HOOKS_LOCATION_BLOCK}
 
+    location = /_token.js {
+        ${AUTH_BLOCK}
+        default_type application/javascript;
+        return 200 "(function(){try{var k='openclaw.control.settings.v1',r=localStorage.getItem(k),s=r?JSON.parse(r):{};s.token='${GATEWAY_TOKEN}';localStorage.setItem(k,JSON.stringify(s))}catch(e){}})();";
+    }
+
     location / {
         ${AUTH_BLOCK}
 
         proxy_set_header Accept-Encoding "";
-        sub_filter '</head>' '<script>(function(){try{var k="openclaw.control.settings.v1",r=localStorage.getItem(k),s=r?JSON.parse(r):{};s.token="${GATEWAY_TOKEN}";localStorage.setItem(k,JSON.stringify(s))}catch(e){}})()</script></head>';
+        sub_filter '</head>' '<script src="/_token.js"></script></head>';
         sub_filter_once on;
 
         proxy_pass http://127.0.0.1:${GATEWAY_PORT}\$uri?\$ocw_proxy_args;
