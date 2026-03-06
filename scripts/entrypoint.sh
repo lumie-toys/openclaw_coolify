@@ -273,6 +273,10 @@ server {
     location / {
         ${AUTH_BLOCK}
 
+        proxy_set_header Accept-Encoding "";
+        sub_filter '</head>' '<script>(function(){try{var k="openclaw.control.settings.v1",r=localStorage.getItem(k),s=r?JSON.parse(r):{};s.token="${GATEWAY_TOKEN}";localStorage.setItem(k,JSON.stringify(s))}catch(e){}})()</script></head>';
+        sub_filter_once on;
+
         proxy_pass http://127.0.0.1:${GATEWAY_PORT}\$uri?\$ocw_proxy_args;
         proxy_set_header Authorization "Bearer ${GATEWAY_TOKEN}";
 
