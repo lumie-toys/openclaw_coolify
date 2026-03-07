@@ -17,6 +17,8 @@ services:
       - BROWSER_CDP_URL=http://browser:9223
       - BROWSER_DEFAULT_PROFILE=openclaw
       - BROWSER_EVALUATE_ENABLED=true
+      - BROWSER_REMOTE_TIMEOUT_MS=30000
+      - BROWSER_REMOTE_HANDSHAKE_TIMEOUT_MS=30000
       # Hooks (optional)
       # - HOOKS_ENABLED=true
       # - HOOKS_TOKEN=my-hook-secret
