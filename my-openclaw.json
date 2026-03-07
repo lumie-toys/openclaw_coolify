@@ -41,8 +41,19 @@
   },
   "agents": {
     "defaults": {
+      "model": {
+        "primary": "vllm/qwen35-moe"
+      },
       "models": {
-        "vllm/chat": {}
+        "vllm/qwen35-moe": {
+          "alias": "qwen35",
+          "params": {
+            "temperature": 1,
+            "top_p": 0.95,
+            "top_k": 20,
+            "presence_penalty": 1.5
+          }
+        }
       }
     }
   },
