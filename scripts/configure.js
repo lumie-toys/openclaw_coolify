@@ -612,6 +612,38 @@ if (process.env.BROWSER_CDP_URL) {
   console.log("[configure] browser configured (from custom JSON)");
 }
 
+// ── Sanitize stale web search config keys from persisted state ───────────────
+const VALID_SEARCH_PROVIDERS = new Set(["brave", "perplexity", "grok", "gemini", "kimi"]);
+const KNOWN_SEARCH_KEYS = new Set([
+  "enabled",
+  "provider",
+  "apiKey",
+  "maxResults",
+  "timeoutSeconds",
+  "cacheTtlMinutes",
+  "brave",
+  "gemini",
+  "grok",
+  "kimi",
+  "perplexity",
+]);
+
+if (config.tools?.web?.search && typeof config.tools.web.search === "object" && !Array.isArray(config.tools.web.search)) {
+  const search = config.tools.web.search;
+
+  if (typeof search.provider === "string" && !VALID_SEARCH_PROVIDERS.has(search.provider)) {
+    console.log(`[configure] removing invalid tools.web.search.provider: "${search.provider}"`);
+    delete search.provider;
+  }
+
+  for (const key of Object.keys(search)) {
+    if (!KNOWN_SEARCH_KEYS.has(key)) {
+      console.log(`[configure] removing unknown tools.web.search key: "${key}"`);
+      delete search[key];
+    }
+  }
+}
+
 // ── Validate: at least one provider API key env var must be set ──────────────
 // All providers (built-in and custom) read API keys from env vars, not from JSON.
 const hasProvider =

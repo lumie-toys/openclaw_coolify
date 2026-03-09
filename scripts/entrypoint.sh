@@ -340,4 +340,6 @@ echo "[entrypoint] starting openclaw gateway on port $GATEWAY_PORT..."
 # cwd must be the app root so the gateway finds dist/control-ui/ assets
 # "gateway run" = foreground mode; all config comes from openclaw.json
 cd /opt/openclaw/app
+echo "[entrypoint] final config validation (openclaw doctor --fix)..."
+openclaw doctor --fix 2>&1 || true
 exec openclaw gateway run
