@@ -35,27 +35,27 @@ function deepMerge(target, source) {
   return target;
 }
 
-// Load config: custom JSON (base) → existing persisted config → env vars (on top)
+// Load config: existing persisted config (base) → custom JSON overrides → env vars (on top)
 let config = {};
 
-// 1. Load user-provided custom config as base (if mounted)
+// 1. Load persisted config as base (runtime state from previous runs)
+try {
+  config = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"));
+  console.log("[configure] loaded persisted config from", CONFIG_FILE);
+} catch {
+  console.log("[configure] no persisted config found");
+}
+
+// 2. Merge user-provided custom config on top (if mounted)
 let hasCustomConfig = false;
 try {
   const customRaw = fs.readFileSync(CUSTOM_CONFIG, "utf8");
-  config = JSON.parse(customRaw);
+  const custom = JSON.parse(customRaw);
+  deepMerge(config, custom);
   hasCustomConfig = true;
-  console.log("[configure] loaded custom config from", CUSTOM_CONFIG);
+  console.log("[configure] merged custom config from", CUSTOM_CONFIG, "(overrides persisted)");
 } catch {
   // No custom config file — that's fine
-}
-
-// 2. Merge persisted config on top (preserves runtime state from previous runs)
-try {
-  const persisted = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"));
-  deepMerge(config, persisted);
-  console.log("[configure] merged persisted config from", CONFIG_FILE);
-} catch {
-  console.log("[configure] no persisted config found");
 }
 
 // 3. Env vars override on top (applied below)
