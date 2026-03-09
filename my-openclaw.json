@@ -3,7 +3,7 @@
     "mode": "merge",
     "providers": {
       "ollama": {
-        "baseUrl": "http://100.98.78.106:8000/v1",
+        "baseUrl": "http://localhost:8000/v1",
         "api": "openai-completions",
         "models": [
           {
