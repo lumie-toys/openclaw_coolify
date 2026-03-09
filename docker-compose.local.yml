@@ -6,7 +6,7 @@ services:
     environment:
       # Provider (at least one required)
       - OPENCODE_API_KEY=${OPENCODE_API_KEY:-aaa}
-      - OPENCLAW_PRIMARY_MODEL=vllm/qwen35-moe
+      - OPENCLAW_PRIMARY_MODEL=litellm/Agentic
       - COOLIFY_FQDN=${SERVICE_FQDN_OPENCLAW}
       # Auth
       - AUTH_USERNAME=${AUTH_USERNAME:-admin}
