@@ -273,7 +273,7 @@ server {
     location = /_token.js {
         ${AUTH_BLOCK}
         default_type application/javascript;
-        return 200 "(function(){try{var k='openclaw.control.settings.v1',r=localStorage.getItem(k),s=r?JSON.parse(r):{};s.token='${GATEWAY_TOKEN}';localStorage.setItem(k,JSON.stringify(s))}catch(e){}})();";
+        return 200 "(function(){try{var t='${GATEWAY_TOKEN}';if(!t)return;var u=new URL(window.location.href);if(!u.searchParams.get('token')){u.searchParams.set('token',t);window.history.replaceState({},'',u.toString())}}catch(e){}})();";
     }
 
     location / {
