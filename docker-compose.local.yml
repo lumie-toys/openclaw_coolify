@@ -22,8 +22,6 @@ services:
       - BROWSER_REMOTE_HANDSHAKE_TIMEOUT_MS=30000
     volumes:
       - openclaw-data:/data
-    extra_hosts:
-      - "litellm.hseri.com:192.168.68.40"
     depends_on:
       - browser
     restart: unless-stopped
