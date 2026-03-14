@@ -9,6 +9,7 @@ services:
       - LITELLM_API_KEY=sk-qxznfqSa-kXn4GVOITAYcg
       - OPENCLAW_PRIMARY_MODEL=litellm/Agentic
       - COOLIFY_FQDN=${SERVICE_FQDN_OPENCLAW}
+      - SEARXNG_BASE_URL=https://searxng-g44cookggsos08gkgg0cogc0.vcorp.ai/
       # Auth
       - AUTH_USERNAME=${AUTH_USERNAME:-admin}
       - AUTH_PASSWORD=${SERVICE_PASSWORD_AUTH}

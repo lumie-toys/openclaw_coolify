@@ -82,6 +82,14 @@
           }
         ]
       }
+    },
+    "web": {
+      "search": {
+        "provider": "searxng",
+        "searxng": {
+          "baseUrl": "${SEARXNG_BASE_URL}"
+        }
+      }
     }
   }
 }
