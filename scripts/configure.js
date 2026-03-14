@@ -654,7 +654,8 @@ const hasProvider =
   // Custom proxy providers also need env var keys
   !!process.env.VENICE_API_KEY || !!process.env.MINIMAX_API_KEY ||
   !!process.env.MOONSHOT_API_KEY || !!process.env.KIMI_API_KEY ||
-  !!process.env.SYNTHETIC_API_KEY || !!process.env.XIAOMI_API_KEY;
+  !!process.env.SYNTHETIC_API_KEY || !!process.env.XIAOMI_API_KEY ||
+  !!process.env.LITELLM_API_KEY;
 
 if (!hasProvider) {
   console.error("[configure] ERROR: No AI provider API key set.");
@@ -663,6 +664,7 @@ if (!hasProvider) {
   console.error("[configure]   XAI_API_KEY, GROQ_API_KEY, MISTRAL_API_KEY, CEREBRAS_API_KEY, ZAI_API_KEY,");
   console.error("[configure]   AI_GATEWAY_API_KEY, OPENCODE_API_KEY, COPILOT_GITHUB_TOKEN, VENICE_API_KEY,");
   console.error("[configure]   MOONSHOT_API_KEY, KIMI_API_KEY, MINIMAX_API_KEY, SYNTHETIC_API_KEY, XIAOMI_API_KEY,");
+  console.error("[configure]   LITELLM_API_KEY,");
   console.error("[configure]   AWS_ACCESS_KEY_ID+AWS_SECRET_ACCESS_KEY (Bedrock), or OLLAMA_BASE_URL (local)");
   process.exit(1);
 }
