@@ -612,8 +612,18 @@ if (process.env.BROWSER_CDP_URL) {
   console.log("[configure] browser configured (from custom JSON)");
 }
 
+// ── Web search (SearXNG) ─────────────────────────────────────────────────────
+if (process.env.SEARXNG_BASE_URL) {
+  console.log("[configure] configuring web search provider: searxng (from env)");
+  ensure(config, "tools", "web", "search");
+  const search = config.tools.web.search;
+  ensure(search, "searxng");
+  search.provider = "searxng";
+  search.searxng.baseUrl = process.env.SEARXNG_BASE_URL;
+}
+
 // ── Sanitize stale web search config keys from persisted state ───────────────
-const VALID_SEARCH_PROVIDERS = new Set(["brave", "perplexity", "grok", "gemini", "kimi"]);
+const VALID_SEARCH_PROVIDERS = new Set(["brave", "perplexity", "grok", "gemini", "kimi", "searxng"]);
 const KNOWN_SEARCH_KEYS = new Set([
   "enabled",
   "provider",
@@ -626,6 +636,7 @@ const KNOWN_SEARCH_KEYS = new Set([
   "grok",
   "kimi",
   "perplexity",
+  "searxng",
 ]);
 
 if (config.tools?.web?.search && typeof config.tools.web.search === "object" && !Array.isArray(config.tools.web.search)) {
