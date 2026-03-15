@@ -7,6 +7,7 @@ services:
       # Provider (at least one required)
       - OPENCODE_API_KEY=${OPENCODE_API_KEY:-aaa}
       - LITELLM_API_KEY=sk-qxznfqSa-kXn4GVOITAYcg
+      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY:-}
       - OPENCLAW_PRIMARY_MODEL=litellm/Agentic
       - COOLIFY_FQDN=${SERVICE_FQDN_OPENCLAW}
       - SEARXNG_BASE_URL=https://searxng-g44cookggsos08gkgg0cogc0.vcorp.ai/

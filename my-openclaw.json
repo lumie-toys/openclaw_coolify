@@ -88,5 +88,45 @@
         "provider": "searxng"
       }
     }
+  },
+  "plugins": {
+    "entries": {
+      "acpx": {
+        "config": {
+          "mcpServers": {
+            "lingxi-summary": {
+              "command": "npx",
+              "args": [
+                "-y",
+                "mcp-remote@latest",
+                "https://dashscope.aliyuncs.com/api/v1/mcps/mcp-MzY3NTdjN2EzOGU5/mcp",
+                "--header",
+                "Authorization: Bearer ${DASHSCOPE_API_KEY}"
+              ]
+            },
+            "lingxi-image-recognition": {
+              "command": "npx",
+              "args": [
+                "-y",
+                "mcp-remote@latest",
+                "https://dashscope.aliyuncs.com/api/v1/mcps/mcp-NDY4YTY0ZTEyZjcz/mcp",
+                "--header",
+                "Authorization: Bearer ${DASHSCOPE_API_KEY}"
+              ]
+            },
+            "lingxi-translate": {
+              "command": "npx",
+              "args": [
+                "-y",
+                "mcp-remote@latest",
+                "https://dashscope.aliyuncs.com/api/v1/mcps/mcp-OTQxMWQyODRjYjQ0/mcp",
+                "--header",
+                "Authorization: Bearer ${DASHSCOPE_API_KEY}"
+              ]
+            }
+          }
+        }
+      }
+    }
   }
 }
