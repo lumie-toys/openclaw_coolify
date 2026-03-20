@@ -60,6 +60,11 @@
       "allowedOrigins": [
         "*"
       ]
+    },
+    "nodes": {
+      "browser": {
+        "mode": "off"
+      }
     }
   },
   "tools": {
