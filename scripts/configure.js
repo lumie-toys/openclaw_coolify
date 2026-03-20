@@ -620,12 +620,6 @@ if (process.env.SEARXNG_BASE_URL) {
   ensure(search, "searxng");
   search.provider = "searxng";
   search.searxng.baseUrl = process.env.SEARXNG_BASE_URL;
-  if (process.env.SEARXNG_ENGINES) {
-    search.searxng.engines = process.env.SEARXNG_ENGINES;
-  }
-  if (process.env.SEARXNG_CATEGORIES) {
-    search.searxng.categories = process.env.SEARXNG_CATEGORIES;
-  }
 }
 
 // ── Sanitize stale web search config keys from persisted state ───────────────
