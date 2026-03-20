@@ -27,6 +27,8 @@ RUN set -eux; \
     sed -i -E 's/"openclaw"[[:space:]]*:[[:space:]]*"workspace:[^"]+"/"openclaw": "*"/g' "$f"; \
   done
 
+ARG NPM_REGISTRY=""
+RUN if [ -n "$NPM_REGISTRY" ]; then echo "registry=$NPM_REGISTRY" >> .npmrc; fi
 RUN pnpm install --no-frozen-lockfile
 ENV OPENCLAW_INCLUDE_OPTIONAL_BUNDLED=1
 RUN pnpm build

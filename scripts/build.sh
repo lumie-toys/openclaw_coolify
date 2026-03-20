@@ -19,6 +19,7 @@ build_base() {
   echo "==> Building base image (source: ./openclaw)..."
   docker build \
     -f Dockerfile.base \
+    ${NPM_REGISTRY:+--build-arg "NPM_REGISTRY=${NPM_REGISTRY}"} \
     -t "${BASE_TAG}" \
     .
   echo "==> Base image built: ${BASE_TAG}"
