@@ -196,6 +196,14 @@ When hooks are enabled and `AUTH_PASSWORD` is set, the hooks path automatically 
 
 Requires a separate browser container connected via Docker networking. Recommended: `kasmweb/chrome` (full Chrome desktop via noVNC on `:6901`, CDP on `:9222`). Docs: https://docs.openclaw.ai/tools/browser
 
+### Web search (SearXNG, optional)
+
+| Variable | Description |
+|---|---|
+| `SEARXNG_BASE_URL` | SearXNG base URL (e.g. `http://searxng:8888` or `https://searxng.example.com`). When set, `tools.web.search.provider` is forced to `searxng`. |
+| `SEARXNG_ENGINES` | Optional comma-separated engine list passed to SearXNG `engines` query param (e.g. `google,bing,duckduckgo`). |
+| `SEARXNG_CATEGORIES` | Optional comma-separated category list passed to SearXNG `categories` query param (e.g. `general,news`). |
+
 #### Browser login (VNC sidecar)
 
 For sites requiring authentication, use `kasmweb/chrome` so you can log in manually via a web-based desktop. Openclaw reuses the authenticated session via CDP.
