@@ -23,6 +23,12 @@
             "name": "Agentic",
             "contextWindow": 256000,
             "maxTokens": 128000
+          },
+          {
+            "id": "Imaging",
+            "name": "Imaging",
+            "contextWindow": 128000,
+            "maxTokens": 4096
           }
         ]
       }
@@ -33,11 +39,20 @@
       "model": {
         "primary": "litellm/Agentic"
       },
+      "imageModel": {
+        "primary": "litellm/Imaging"
+      },
       "models": {
         "litellm/Agentic": {
           "alias": "agentic",
           "params": {
             "temperature": 0.7
+          }
+        },
+        "litellm/Imaging": {
+          "alias": "imaging",
+          "params": {
+            "temperature": 0.3
           }
         }
       }
@@ -80,7 +95,7 @@
         "models": [
           {
             "provider": "litellm",
-            "model": "Agentic",
+            "model": "Imaging",
             "capabilities": [
               "image"
             ]
