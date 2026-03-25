@@ -183,6 +183,17 @@ If a provider env var is removed, that provider section is cleaned from `opencla
 
 When hooks are enabled and `AUTH_PASSWORD` is set, the hooks path automatically bypasses HTTP basic auth. Openclaw validates requests using the hook token instead. Docs: https://docs.openclaw.ai/automation/webhook
 
+### MQTT plugin (EMQX / IoT messaging, optional)
+
+| Variable | Default | Description |
+|---|---|---|
+| `MQTT_BROKER_URL` | | MQTT broker URL (for example `mqtt://emqx:1883`). When set, enables `plugins.entries.mqtt`. |
+| `MQTT_USERNAME` | | MQTT username. |
+| `MQTT_PASSWORD` | | MQTT password. |
+| `MQTT_CLIENT_ID` | `openclaw` | Client ID used for broker connection. |
+| `MQTT_SUBSCRIBE_TOPICS` | | Comma-separated topic list subscribed on startup (for example `device/+/status,device/+/event`). |
+| `MQTT_QOS` | `1` | Default QoS for subscriptions and publishes (`0`, `1`, `2`). |
+
 ### Browser tool (remote CDP sidecar, optional)
 
 | Variable | Default | Description |

@@ -22,6 +22,13 @@ services:
       - BROWSER_EVALUATE_ENABLED=true
       - BROWSER_REMOTE_TIMEOUT_MS=30000
       - BROWSER_REMOTE_HANDSHAKE_TIMEOUT_MS=30000
+      # MQTT plugin (EMQX)
+      - MQTT_BROKER_URL=${MQTT_BROKER_URL:-}
+      - MQTT_USERNAME=${MQTT_USERNAME:-}
+      - MQTT_PASSWORD=${MQTT_PASSWORD:-}
+      - MQTT_CLIENT_ID=${MQTT_CLIENT_ID:-openclaw}
+      - MQTT_SUBSCRIBE_TOPICS=${MQTT_SUBSCRIBE_TOPICS:-}
+      - MQTT_QOS=${MQTT_QOS:-1}
     volumes:
       - openclaw-data:/data
     depends_on:

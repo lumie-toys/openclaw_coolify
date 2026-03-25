@@ -589,6 +589,28 @@ if (process.env.HOOKS_ENABLED === "true" || process.env.HOOKS_ENABLED === "1") {
   console.log("[configure] hooks configured (from custom JSON)");
 }
 
+// ── MQTT plugin (EMQX / IoT messaging) ───────────────────────────────────────
+if (process.env.MQTT_BROKER_URL) {
+  console.log("[configure] configuring mqtt plugin (from env)");
+  ensure(config, "plugins", "entries");
+  const mqtt = config.plugins.entries.mqtt = config.plugins.entries.mqtt || {};
+  mqtt.enabled = true;
+  ensure(mqtt, "config");
+  const mc = mqtt.config;
+  mc.brokerUrl = process.env.MQTT_BROKER_URL;
+  if (process.env.MQTT_USERNAME) mc.username = process.env.MQTT_USERNAME;
+  if (process.env.MQTT_PASSWORD) mc.password = process.env.MQTT_PASSWORD;
+  if (process.env.MQTT_CLIENT_ID) mc.clientId = process.env.MQTT_CLIENT_ID;
+  if (process.env.MQTT_SUBSCRIBE_TOPICS) {
+    mc.subscribeTopics = process.env.MQTT_SUBSCRIBE_TOPICS.split(",")
+      .map(s => s.trim())
+      .filter(Boolean);
+  }
+  if (process.env.MQTT_QOS) mc.qos = parseInt(process.env.MQTT_QOS, 10);
+} else if (config.plugins?.entries?.mqtt) {
+  console.log("[configure] mqtt plugin configured (from custom JSON)");
+}
+
 // ── Browser tool (remote CDP) ────────────────────────────────────────────────
 if (process.env.BROWSER_CDP_URL) {
   console.log("[configure] configuring browser tool (remote CDP)");
