@@ -144,6 +144,7 @@ fi
 
 # ── Configure openclaw from env vars ─────────────────────────────────────────
 echo "[entrypoint] running configure..."
+rm -f "$STATE_DIR/exec-approvals.json"
 node /app/scripts/configure.js
 chmod 600 "$STATE_DIR/openclaw.json"
 
