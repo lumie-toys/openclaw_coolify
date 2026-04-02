@@ -85,7 +85,8 @@
   "tools": {
     "profile": "full",
     "exec": {
-      "security": "full"
+      "security": "full",
+      "ask": "off"
     },
     "sessions": {
       "visibility": "all"
