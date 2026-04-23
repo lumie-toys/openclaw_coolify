@@ -1,5 +1,8 @@
 services:
   openclaw:
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: openclaw:local
     expose:
       - "${PORT:-8080}"
@@ -37,6 +40,9 @@ services:
     restart: unless-stopped
 
   browser:
+    build:
+      context: .
+      dockerfile: Dockerfile.browser
     image: openclaw-browser:local
     environment:
       - PUID=1000
