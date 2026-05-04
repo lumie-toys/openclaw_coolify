@@ -171,11 +171,18 @@ AUTH_USERNAME="${AUTH_USERNAME:-admin}"
 NGINX_CONF="/etc/nginx/conf.d/openclaw.conf"
 
 AUTH_BLOCK=""
+AUTH_REALM_MAP=""
 if [ -n "$AUTH_PASSWORD" ]; then
   echo "[entrypoint] setting up nginx basic auth (user: $AUTH_USERNAME)"
   htpasswd -bc /etc/nginx/.htpasswd "$AUTH_USERNAME" "$AUTH_PASSWORD" 2>/dev/null
-  AUTH_BLOCK='auth_basic "Openclaw";
+  AUTH_BLOCK='auth_basic $auth_realm;
         auth_basic_user_file /etc/nginx/.htpasswd;'
+  # Browser WebSocket handshakes do not reliably carry cached Basic Auth creds.
+  # Disable only for Upgrade:websocket requests; keep auth for normal HTTP.
+  AUTH_REALM_MAP='map $http_upgrade $auth_realm {
+    "~*websocket" off;
+    default "Openclaw";
+}'
 else
   echo "[entrypoint] no AUTH_PASSWORD set, nginx will not require authentication"
 fi
@@ -239,6 +246,8 @@ map \$http_upgrade \$connection_upgrade {
     default upgrade;
     ''      close;
 }
+
+${AUTH_REALM_MAP}
 
 map \$arg_token \$ocw_has_token {
     ''      0;
