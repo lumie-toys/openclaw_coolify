@@ -178,10 +178,23 @@ if [ -n "$AUTH_PASSWORD" ]; then
   AUTH_BLOCK='auth_basic $auth_realm;
         auth_basic_user_file /etc/nginx/.htpasswd;'
   # Browser WebSocket handshakes do not reliably carry cached Basic Auth creds.
-  # Disable only for Upgrade:websocket requests; keep auth for normal HTTP.
-  AUTH_REALM_MAP='map $http_upgrade $auth_realm {
+  # Some UI fetches and browser-managed icon/manifest requests may also skip
+  # Basic Auth credentials. Keep Basic Auth for HTML pages while allowing
+  # these specific paths to pass via gateway token auth.
+  AUTH_REALM_MAP='map $http_upgrade $auth_realm_upgrade {
     "~*websocket" off;
     default "Openclaw";
+}
+
+map $uri $auth_realm {
+    ~^/__openclaw/ off;
+    ~^/avatar/ off;
+    ~^/assets/ off;
+    ~^/sw\.js$ off;
+    ~^/manifest\.webmanifest$ off;
+    ~^/apple-touch-icon\.png$ off;
+    ~^/favicon(?:\.svg|-32\.png)?$ off;
+    default $auth_realm_upgrade;
 }'
 else
   echo "[entrypoint] no AUTH_PASSWORD set, nginx will not require authentication"
