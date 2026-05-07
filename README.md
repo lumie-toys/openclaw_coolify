@@ -33,6 +33,15 @@ docker compose up -d
 1. **Openclaw UI** — `http://localhost:8080` (login: your `AUTH_USERNAME` / `AUTH_PASSWORD`)
 2. **Browser desktop** — `http://localhost:8080/browser/` (login: your `AUTH_USERNAME` / browser `PASSWORD`) — use this to log into sites that need auth (OAuth, 2FA, captchas). Openclaw reuses the session via CDP.
 
+### Coolify Deploy (use prebuilt local images)
+
+If you deploy with `docker-compose.local.yml` and want to reuse locally built images (`openclaw:local`, `openclaw-browser:local`) without rebuild:
+
+1. Run `./scripts/build.sh` before each deploy (or whenever Dockerfiles/source change).
+2. In Coolify, keep deployment type as Docker Compose.
+3. Ensure no "force build" style option is enabled in the application settings.
+4. Keep `docker-compose.local.yml` services image-only (no `build:` blocks), otherwise Coolify will rebuild.
+
 ## Architecture
 
 ```
