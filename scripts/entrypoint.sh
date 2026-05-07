@@ -148,15 +148,10 @@ rm -f "$STATE_DIR/exec-approvals.json"
 node /app/scripts/configure.js
 chmod 600 "$STATE_DIR/openclaw.json"
 
-# ── Optional doctor pass ─────────────────────────────────────────────────────
-# Doctor can invoke provider/tool probes, so keep container startup non-blocking by default.
-if [ "${OPENCLAW_DOCKER_RUN_DOCTOR:-false}" = "true" ]; then
-  echo "[entrypoint] running openclaw doctor --fix..."
-  cd /opt/openclaw/app
-  openclaw doctor --fix 2>&1 || true
-else
-  echo "[entrypoint] skipping openclaw doctor --fix at startup"
-fi
+# ── Auto-fix doctor suggestions (e.g. enable configured channels) ─────────
+echo "[entrypoint] running openclaw doctor --fix..."
+cd /opt/openclaw/app
+openclaw doctor --fix 2>&1 || true
 
 # ── Read hooks path from generated config (if hooks enabled) ─────────────────
 HOOKS_PATH=""
@@ -174,8 +169,6 @@ fi
 AUTH_PASSWORD="${AUTH_PASSWORD:-${SERVICE_PASSWORD_AUTH:-}}"
 AUTH_USERNAME="${AUTH_USERNAME:-admin}"
 NGINX_CONF="/etc/nginx/conf.d/openclaw.conf"
-BROWSER_WEB_PROXY_URL="${BROWSER_WEB_URL:-http://browser:3000}"
-BROWSER_WEB_PROXY_URL="${BROWSER_WEB_PROXY_URL%/}/"
 
 AUTH_BLOCK=""
 AUTH_REALM_MAP=""
@@ -306,17 +299,6 @@ server {
         return 200 "(function(){try{var t='${GATEWAY_TOKEN}';if(!t)return;var u=new URL(window.location.href);if(!u.searchParams.get('token')){u.searchParams.set('token',t);window.history.replaceState({},'',u.toString())}}catch(e){}})();";
     }
 
-    # Browser auto-fetches these assets without Basic Auth credentials.
-    # Keep them unauthenticated at nginx layer, but still proxy with gateway token.
-    location ~* ^/(manifest\.webmanifest|favicon\.svg|favicon-32\.png|apple-touch-icon\.png)$ {
-        proxy_pass http://127.0.0.1:${GATEWAY_PORT}\$uri?\$ocw_proxy_args;
-        proxy_set_header Authorization "Bearer ${GATEWAY_TOKEN}";
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
-
     location / {
         ${AUTH_BLOCK}
 
@@ -351,7 +333,7 @@ server {
     location /browser/ {
         ${AUTH_BLOCK}
 
-        proxy_pass ${BROWSER_WEB_PROXY_URL};
+        proxy_pass http://browser:3000/;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -381,4 +363,6 @@ echo "[entrypoint] starting openclaw gateway on port $GATEWAY_PORT..."
 # cwd must be the app root so the gateway finds dist/control-ui/ assets
 # "gateway run" = foreground mode; all config comes from openclaw.json
 cd /opt/openclaw/app
+echo "[entrypoint] final config validation (openclaw doctor --fix)..."
+openclaw doctor --fix 2>&1 || true
 exec openclaw gateway run
