@@ -1,7 +1,18 @@
 #!/usr/bin/env bash
 set -e
 
-STATE_DIR="${OPENCLAW_STATE_DIR:-/data/.openclaw}"
+RAW_STATE_DIR="${OPENCLAW_STATE_DIR:-/data/.openclaw}"
+case "$RAW_STATE_DIR" in
+  "~")
+    STATE_DIR="${HOME:-/root}"
+    ;;
+  "~/"*)
+    STATE_DIR="${HOME:-/root}/${RAW_STATE_DIR#~/}"
+    ;;
+  *)
+    STATE_DIR="$RAW_STATE_DIR"
+    ;;
+esac
 WORKSPACE_DIR="${OPENCLAW_WORKSPACE_DIR:-/data/workspace}"
 GATEWAY_PORT="${OPENCLAW_GATEWAY_PORT:-18789}"
 
@@ -128,6 +139,15 @@ export OPENCLAW_WORKSPACE_DIR="$WORKSPACE_DIR"
 # This avoids "multiple state directories" warnings from openclaw doctor
 # (symlinks are detected as separate paths).
 export HOME="${STATE_DIR%/.openclaw}"
+
+# Make state/home env available to future login shells (e.g. docker exec bash -l),
+# so CLI local fallback reads the same pairing files as the running gateway.
+cat <<EOF > /etc/profile.d/openclaw-env.sh
+export OPENCLAW_STATE_DIR="$OPENCLAW_STATE_DIR"
+export OPENCLAW_WORKSPACE_DIR="$OPENCLAW_WORKSPACE_DIR"
+export HOME="$HOME"
+EOF
+chmod +x /etc/profile.d/openclaw-env.sh
 
 # ── Run custom init script (if provided) ─────────────────────────────────────
 INIT_SCRIPT="${OPENCLAW_DOCKER_INIT_SCRIPT:-}"
