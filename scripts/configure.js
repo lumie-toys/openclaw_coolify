@@ -136,6 +136,14 @@ function removeProvider(name, label, envHint) {
 // ── Built-in providers (env var only, no models.providers entry) ────────────
 // These are auto-detected by openclaw when the env var is set.
 const opencodeKey = process.env.OPENCODE_API_KEY || process.env.OPENCODE_ZEN_API_KEY;
+const litellmKey = process.env.LITELLM_API_KEY;
+
+function providerAvailableForModel(model) {
+  const provider = String(model || "").split("/")[0];
+  if (provider === "litellm") return !!litellmKey;
+  if (provider === "opencode") return !!opencodeKey;
+  return true;
+}
 
 // [envVar, label, providerKey in models.providers]
 const builtinProviders = [
@@ -170,6 +178,26 @@ if (opencodeKey) {
 if (!hasCustomConfig && config.models?.providers?.opencode) {
   console.log("[configure] removing stale models.providers.opencode (built-in, not needed)");
   delete config.models.providers.opencode;
+}
+
+if (!litellmKey && config.models?.providers?.litellm) {
+  console.log("[configure] removing Litellm provider (LITELLM_API_KEY not set)");
+  delete config.models.providers.litellm;
+  if (config.agents?.defaults?.model?.primary?.startsWith("litellm/")) {
+    delete config.agents.defaults.model.primary;
+  }
+  if (config.agents?.defaults?.imageModel?.primary?.startsWith("litellm/")) {
+    delete config.agents.defaults.imageModel.primary;
+  }
+  if (config.agents?.defaults?.models) {
+    for (const key of Object.keys(config.agents.defaults.models)) {
+      if (key.startsWith("litellm/")) delete config.agents.defaults.models[key];
+    }
+  }
+  const imageModels = config.tools?.media?.image?.models;
+  if (Array.isArray(imageModels)) {
+    config.tools.media.image.models = imageModels.filter((model) => model?.provider !== "litellm");
+  }
 }
 
 // ── Custom/proxy providers (need full models.providers config) ──────────────
@@ -346,10 +374,12 @@ const primaryCandidates = [
   [process.env.AWS_ACCESS_KEY_ID,      "amazon-bedrock/anthropic.claude-opus-4-5-20251101-v1:0"],
   [ollamaUrl,                          "ollama/llama3.3"],
 ];
-if (process.env.OPENCLAW_PRIMARY_MODEL) {
+if (process.env.OPENCLAW_PRIMARY_MODEL && providerAvailableForModel(process.env.OPENCLAW_PRIMARY_MODEL)) {
   // Explicit env var override
   config.agents.defaults.model.primary = process.env.OPENCLAW_PRIMARY_MODEL;
   console.log(`[configure] primary model (override): ${process.env.OPENCLAW_PRIMARY_MODEL}`);
+} else if (process.env.OPENCLAW_PRIMARY_MODEL) {
+  console.log(`[configure] ignoring primary model override for unavailable provider: ${process.env.OPENCLAW_PRIMARY_MODEL}`);
 } else if (config.agents.defaults.model.primary) {
   // Already set (from custom JSON or persisted config) — keep it
   console.log(`[configure] primary model (from config): ${config.agents.defaults.model.primary}`);
