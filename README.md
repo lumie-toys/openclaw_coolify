@@ -42,6 +42,26 @@ If you deploy with `docker-compose.local.yml` and want to reuse locally built im
 3. Ensure no "force build" style option is enabled in the application settings.
 4. Keep `docker-compose.local.yml` services image-only (no `build:` blocks), otherwise Coolify will rebuild.
 
+### Submodule lightweight sync (`openclaw`)
+
+The `openclaw/` source is a large submodule. Use shallow + blobless sync to reduce bandwidth and improve sync reliability:
+
+```powershell
+./scripts/sync-openclaw.ps1
+```
+
+To track latest upstream `main` with the same lightweight strategy:
+
+```powershell
+./scripts/sync-openclaw.ps1 -Remote
+```
+
+Equivalent raw git command:
+
+```bash
+git -c protocol.version=2 submodule update --init --depth 1 --recommend-shallow --filter=blob:none -- openclaw
+```
+
 ## Architecture
 
 ```

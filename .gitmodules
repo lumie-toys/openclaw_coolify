@@ -1,3 +1,5 @@
 [submodule "openclaw"]
 	path = openclaw
 	url = https://github.com/lumie-toys/openclaw.git
+	branch = main
+	shallow = true
