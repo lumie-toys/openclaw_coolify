@@ -1,0 +1,86 @@
+{
+  "plugins": {
+    "allow": ["mem0"],
+    "slots": {
+      "memory": "openclaw-mem0"
+    },
+    "entries": {
+      "openclaw-mem0": {
+        "enabled": true,
+        "config": {
+          "mode": "open-source",
+          "userId": "${OPENCLAW_MEM0_USER_ID}",
+          "autoCapture": true,
+          "autoRecall": true,
+          "topK": 5,
+          "searchThreshold": 0.3,
+          "skills": {
+            "triage": {
+              "enabled": true,
+              "credentialPatterns": [
+                "sk-[A-Za-z0-9_-]+",
+                "m0-[A-Za-z0-9_-]+",
+                "ghp_[A-Za-z0-9_]+",
+                "Bearer\\s+[A-Za-z0-9._-]+",
+                "password\\s*=",
+                "token\\s*=",
+                "secret\\s*="
+              ]
+            },
+            "recall": {
+              "enabled": true,
+              "strategy": "smart",
+              "tokenBudget": 1500,
+              "maxMemories": 8,
+              "rerank": true,
+              "keywordSearch": true,
+              "identityAlwaysInclude": true
+            },
+            "dream": {
+              "enabled": true,
+              "auto": true,
+              "minHours": 24,
+              "minSessions": 5,
+              "minMemories": 20
+            },
+            "domain": "companion"
+          },
+          "oss": {
+            "embedder": {
+              "provider": "openai",
+              "config": {
+                "model": "Qwen/Qwen3-Embedding-0.6B",
+                "apiKey": "${LITELLM_API_KEY}",
+                "baseURL": "${LITELLM_BASE_URL}",
+                "embeddingDims": 1024
+              }
+            },
+            "vectorStore": {
+              "provider": "pgvector",
+              "config": {
+                "host": "${PG_HOST}",
+                "port": "${PG_PORT}",
+                "user": "${PG_USER}",
+                "password": "${PG_PASSWORD}",
+                "dbname": "${PG_DBNAME}",
+                "collectionName": "memories",
+                "dimension": 1024,
+                "sslmode": "${PG_SSLMODE}"
+              }
+            },
+            "llm": {
+              "provider": "openai",
+              "config": {
+                "model": "chat",
+                "apiKey": "${LITELLM_API_KEY}",
+                "baseURL": "${LITELLM_BASE_URL}",
+                "temperature": 0.2
+              }
+            },
+            "disableHistory": true
+          }
+        }
+      }
+    }
+  }
+}
