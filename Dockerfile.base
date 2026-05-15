@@ -31,7 +31,9 @@ ARG NPM_REGISTRY=""
 RUN if [ -n "$NPM_REGISTRY" ]; then echo "registry=$NPM_REGISTRY" >> .npmrc; fi
 RUN sed -i '/^minimumReleaseAgeExclude:/a\  - "matrix-js-sdk"' pnpm-workspace.yaml
 RUN sed -i '/^minimumReleaseAgeExclude:/a\  - "tokenjuice"' pnpm-workspace.yaml
-RUN pnpm install --no-frozen-lockfile
+RUN sed -i '/^minimumReleaseAgeExclude:/a\  - "@openclaw/fs-safe"' pnpm-workspace.yaml
+RUN sed -i '/^allowBuilds:/a\  better-sqlite3: true' pnpm-workspace.yaml
+RUN pnpm install --no-frozen-lockfile --config.blockExoticSubdeps=false
 ENV OPENCLAW_INCLUDE_OPTIONAL_BUNDLED=1
 RUN pnpm build
 ENV OPENCLAW_PREFER_PNPM=1
