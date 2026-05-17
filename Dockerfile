@@ -3,6 +3,7 @@ ARG BASE_IMAGE=ghcr.io/coollabsio/openclaw-base:latest
 FROM ${BASE_IMAGE}
 
 ENV NODE_ENV=production
+ENV OPENCLAW_ALLOW_ROOT=1
 
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
