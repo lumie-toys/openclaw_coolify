@@ -47,9 +47,30 @@ RUN for pkg in better-sqlite3 sharp; do \
 # Use the Node headers already in the base image; avoid node-gyp downloads during build.
 ENV npm_config_nodedir=/usr/local
 # append-only reporter keeps pnpm progress visible in docker build logs (no TTY).
-RUN pnpm install --no-frozen-lockfile \
-      --config.blockExoticSubdeps=false \
-      --reporter=append-only
+# Retry install loop tolerates flaky non-registry downloads (e.g. matrix-sdk-crypto
+# pulls native binaries from GitHub Releases, which can stall on slow links).
+RUN set -eux; \
+    install_ok=0; \
+    for i in 1 2 3 4 5; do \
+      if pnpm install --no-frozen-lockfile \
+           --config.blockExoticSubdeps=false \
+           --reporter=append-only; then \
+        install_ok=1; break; \
+      fi; \
+      echo "[pnpm-install retry $i] sleeping before retry..."; \
+      sleep 15; \
+    done; \
+    [ "$install_ok" = "1" ] || (echo "pnpm install failed after 5 attempts" >&2 && exit 1); \
+    for j in 1 2 3 4 5; do \
+      if find /openclaw/node_modules -name "matrix-sdk-crypto*.node" 2>/dev/null | grep -q .; then \
+        break; \
+      fi; \
+      echo "[matrix-sdk-crypto retry $j]"; \
+      node /openclaw/node_modules/@matrix-org/matrix-sdk-crypto-nodejs/download-lib.js || true; \
+      sleep $((j * 5)); \
+    done; \
+    find /openclaw/node_modules -name "matrix-sdk-crypto*.node" 2>/dev/null | grep -q . \
+      || (echo "ERROR: matrix-sdk-crypto native addon missing after retries" >&2 && exit 1)
 ENV OPENCLAW_INCLUDE_OPTIONAL_BUNDLED=1
 RUN pnpm build
 ENV OPENCLAW_PREFER_PNPM=1
