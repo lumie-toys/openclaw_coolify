@@ -17,6 +17,9 @@
         "baseUrl": "${LITELLM_BASE_URL}",
         "apiKey": "${LITELLM_API_KEY}",
         "api": "openai-completions",
+        "request": {
+          "allowPrivateNetwork": true
+        },
         "models": [
           {
             "id": "Agentic",

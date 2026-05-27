@@ -38,10 +38,18 @@ RUN sed -i 's/^minimumReleaseAge:.*/minimumReleaseAge: 0/' pnpm-workspace.yaml
 RUN sed -i '/^minimumReleaseAgeExclude:/a\  - "matrix-js-sdk"' pnpm-workspace.yaml
 RUN sed -i '/^minimumReleaseAgeExclude:/a\  - "tokenjuice"' pnpm-workspace.yaml
 RUN sed -i '/^minimumReleaseAgeExclude:/a\  - "@openclaw/fs-safe"' pnpm-workspace.yaml
-RUN sed -i '/^allowBuilds:/a\  better-sqlite3: true' pnpm-workspace.yaml
+# Additional native packages introduced over time that need build scripts.
+# Keep this list growable; pnpm 11 refuses to run install scripts unless allowlisted.
+RUN for pkg in better-sqlite3 sharp; do \
+      grep -q "^  ${pkg}:" pnpm-workspace.yaml \
+        || sed -i "/^allowBuilds:/a\\  ${pkg}: true" pnpm-workspace.yaml; \
+    done
 # Use the Node headers already in the base image; avoid node-gyp downloads during build.
 ENV npm_config_nodedir=/usr/local
-RUN pnpm install --no-frozen-lockfile --config.blockExoticSubdeps=false
+# append-only reporter keeps pnpm progress visible in docker build logs (no TTY).
+RUN pnpm install --no-frozen-lockfile \
+      --config.blockExoticSubdeps=false \
+      --reporter=append-only
 ENV OPENCLAW_INCLUDE_OPTIONAL_BUNDLED=1
 RUN pnpm build
 ENV OPENCLAW_PREFER_PNPM=1
