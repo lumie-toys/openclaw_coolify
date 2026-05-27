@@ -16,6 +16,10 @@ ENV PATH="/root/.bun/bin:${PATH}"
 
 RUN corepack enable
 
+# Baileys/libsignal git deps use git+ssh; rewrite to HTTPS inside Docker build.
+RUN git config --global url."https://github.com/".insteadOf "ssh://git@github.com/" \
+  && git config --global url."https://github.com/".insteadOf "git@github.com:"
+
 WORKDIR /openclaw
 COPY openclaw/ /openclaw/
 RUN rm -rf .git .gitmodules
@@ -29,10 +33,14 @@ RUN set -eux; \
 
 ARG NPM_REGISTRY=""
 RUN if [ -n "$NPM_REGISTRY" ]; then echo "registry=$NPM_REGISTRY" >> .npmrc; fi
+# Docker builds resolve registry packages at build time, so do not block on fresh direct deps.
+RUN sed -i 's/^minimumReleaseAge:.*/minimumReleaseAge: 0/' pnpm-workspace.yaml
 RUN sed -i '/^minimumReleaseAgeExclude:/a\  - "matrix-js-sdk"' pnpm-workspace.yaml
 RUN sed -i '/^minimumReleaseAgeExclude:/a\  - "tokenjuice"' pnpm-workspace.yaml
 RUN sed -i '/^minimumReleaseAgeExclude:/a\  - "@openclaw/fs-safe"' pnpm-workspace.yaml
 RUN sed -i '/^allowBuilds:/a\  better-sqlite3: true' pnpm-workspace.yaml
+# Use the Node headers already in the base image; avoid node-gyp downloads during build.
+ENV npm_config_nodedir=/usr/local
 RUN pnpm install --no-frozen-lockfile --config.blockExoticSubdeps=false
 ENV OPENCLAW_INCLUDE_OPTIONAL_BUNDLED=1
 RUN pnpm build

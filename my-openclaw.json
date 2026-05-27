@@ -14,7 +14,7 @@
         ]
       },
       "litellm": {
-        "baseUrl": "https://litellm.hseri.com",
+        "baseUrl": "${LITELLM_BASE_URL}",
         "apiKey": "${LITELLM_API_KEY}",
         "api": "openai-completions",
         "models": [
