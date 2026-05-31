@@ -91,6 +91,18 @@ Two-layer Docker build:
 1. **Base image** (`Dockerfile.base`) — builds openclaw from source. Tagged `coollabsio/openclaw-base:<version>`.
 2. **Final image** (`Dockerfile`) — FROM base, adds nginx + env-to-config scripts. Tagged `coollabsio/openclaw:<version>`.
 
+### npm registry during Docker build
+
+Docker builds fetch dependencies from the **public npm registry** (`https://registry.npmjs.org/`) by default. Shell `NPM_REGISTRY` (e.g. a local Verdaccio mirror) is **not** forwarded into Docker — it only affects local `pnpm install`.
+
+To override the registry inside Docker (offline/air-gapped):
+
+```bash
+DOCKER_NPM_REGISTRY=http://192.168.7.15:4873/ ./scripts/build.sh
+```
+
+If using a private mirror, ensure it has all versions pinned in `openclaw/pnpm-lock.yaml` before building.
+
 ## Files
 
 ```
