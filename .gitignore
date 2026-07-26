@@ -2,3 +2,6 @@ node_modules
 npm-debug.log*
 .env
 .DS_Store
+# Local build artifacts / cfgfix backups (never commit)
+prebuilt_node_modules.tar
+scripts/*.bak-pre-cfgfix*

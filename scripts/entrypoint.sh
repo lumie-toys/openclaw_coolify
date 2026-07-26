@@ -163,15 +163,111 @@ if [ -n "$INIT_SCRIPT" ]; then
 fi
 
 # ── Configure openclaw from env vars ─────────────────────────────────────────
-echo "[entrypoint] running configure..."
-rm -f "$STATE_DIR/exec-approvals.json"
-node /app/scripts/configure.js
-chmod 600 "$STATE_DIR/openclaw.json"
+# TENANT CONFIG PERSISTENCE (cfgfix):
+#   - First boot only: seed via configure.js (template + env).
+#   - Subsequent boots: NEVER rewrite openclaw.json wholesale. Only patch the
+#     few runtime-dynamic fields via `openclaw config set --batch-json`.
+#   - Do NOT delete exec-approvals.json (user-approved command allowlist).
+#   - Root cause of historical data loss: configure.js deep-merged the baked
+#     template (incl. legacy tools.web.search.searxng) over the tenant config,
+#     then `doctor --fix` judged it invalid and restored last-good from day 1.
+CUSTOM_CFG_FILE="${OPENCLAW_CUSTOM_CONFIG:-/app/config/openclaw.json}"
+if [ -f "$CUSTOM_CFG_FILE" ]; then
+  for var in LITELLM_API_KEY LITELLM_BASE_URL SEARXNG_BASE_URL OPENCODE_API_KEY OPENCLAW_GATEWAY_TOKEN; do
+    val="${!var-}"
+    # Use a separator unlikely to appear in URLs/keys; escape | in value just in case
+    esc_val="${val//|/\\|}"
+    sed -i "s|\${${var}}|${esc_val}|g" "$CUSTOM_CFG_FILE"
+  done
+  echo "[entrypoint] substituted env placeholders in $CUSTOM_CFG_FILE"
+fi
+
+OPENCLAW_CFGFIX_JUST_SEEDED=0
+if [ ! -f "$STATE_DIR/openclaw.json" ]; then
+  echo "[entrypoint] no persisted config; seeding via configure.js (first boot)"
+  node /app/scripts/configure.js
+  chmod 600 "$STATE_DIR/openclaw.json"
+  OPENCLAW_CFGFIX_JUST_SEEDED=1
+else
+  echo "[entrypoint] persisted config present; skipping configure.js rewrite"
+  # Patch only runtime-dynamic values that must track this boot's env / CNI IPs.
+  BATCH='['
+  FIRST=1
+  add_batch() {
+    # $1=path $2=json-value (already JSON-encoded)
+    if [ "$FIRST" -eq 1 ]; then FIRST=0; else BATCH="${BATCH},"; fi
+    BATCH="${BATCH}{\"path\":\"$1\",\"value\":$2}"
+  }
+  if [ -n "${BROWSER_CDP_URL:-}" ]; then
+    esc=$(printf '%s' "$BROWSER_CDP_URL" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g')
+    add_batch "browser.cdpUrl" "\"$esc\""
+  fi
+  if [ -n "${BROWSER_REMOTE_TIMEOUT_MS:-}" ]; then
+    add_batch "browser.remoteCdpTimeoutMs" "$BROWSER_REMOTE_TIMEOUT_MS"
+  fi
+  if [ -n "${BROWSER_REMOTE_HANDSHAKE_TIMEOUT_MS:-}" ]; then
+    add_batch "browser.remoteCdpHandshakeTimeoutMs" "$BROWSER_REMOTE_HANDSHAKE_TIMEOUT_MS"
+  fi
+  if [ -n "${BROWSER_DEFAULT_PROFILE:-}" ]; then
+    esc=$(printf '%s' "$BROWSER_DEFAULT_PROFILE" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g')
+    add_batch "browser.defaultProfile" "\"$esc\""
+  fi
+  if [ "${BROWSER_EVALUATE_ENABLED:-}" = "true" ] || [ "${BROWSER_EVALUATE_ENABLED:-}" = "false" ]; then
+    add_batch "browser.evaluateEnabled" "$BROWSER_EVALUATE_ENABLED"
+  fi
+  if [ -n "${LITELLM_API_KEY:-}" ]; then
+    esc=$(printf '%s' "$LITELLM_API_KEY" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g')
+    add_batch "models.providers.litellm.apiKey" "\"$esc\""
+  fi
+  if [ -n "${LITELLM_BASE_URL:-}" ]; then
+    esc=$(printf '%s' "$LITELLM_BASE_URL" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g')
+    add_batch "models.providers.litellm.baseUrl" "\"$esc\""
+  fi
+  if [ -n "${OPENCLAW_GATEWAY_TOKEN:-}" ]; then
+    esc=$(printf '%s' "$OPENCLAW_GATEWAY_TOKEN" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g')
+    add_batch "gateway.auth.mode" "\"token\""
+    add_batch "gateway.auth.token" "\"$esc\""
+  fi
+  case "${OPENCLAW_DISABLE_DEVICE_AUTH:-}" in
+    1|true|yes|on|TRUE|YES|ON)
+      add_batch "gateway.controlUi.dangerouslyDisableDeviceAuth" "true"
+      ;;
+  esac
+  BATCH="${BATCH}]"
+  if [ "$FIRST" -eq 0 ]; then
+    cd /opt/openclaw/app
+    if openclaw config set --batch-json "$BATCH" >/dev/null 2>&1; then
+      echo "[entrypoint] patched runtime-dynamic config fields via config set"
+    else
+      echo "[entrypoint] WARN: openclaw config set --batch-json failed; leaving persisted config unchanged" >&2
+    fi
+  else
+    echo "[entrypoint] no runtime-dynamic env fields to patch"
+  fi
+  chmod 600 "$STATE_DIR/openclaw.json" 2>/dev/null || true
+fi
 
 # ── Auto-fix doctor suggestions (e.g. enable configured channels) ─────────
-echo "[entrypoint] running openclaw doctor --fix..."
-cd /opt/openclaw/app
-openclaw doctor --fix 2>&1 || true
+# First boot (just seeded): ALWAYS run doctor --fix so legacy keys from
+# configure.js / template are migrated before gateway start. Subsequent boots
+# honor OPENCLAW_SKIP_DOCTOR (ironmand sets it true) — seed-once means the
+# persisted config is already valid and must not be rewritten.
+if [ "${OPENCLAW_CFGFIX_JUST_SEEDED:-0}" = "1" ]; then
+  echo "[entrypoint] first-boot seed complete; running doctor --fix (required)"
+  cd /opt/openclaw/app
+  openclaw doctor --fix 2>&1 || true
+else
+  case "${OPENCLAW_SKIP_DOCTOR:-false}" in
+    1|true|yes|on|TRUE|YES|ON)
+      echo "[entrypoint] OPENCLAW_SKIP_DOCTOR set; skipping doctor --fix"
+      ;;
+    *)
+      echo "[entrypoint] running openclaw doctor --fix..."
+      cd /opt/openclaw/app
+      openclaw doctor --fix 2>&1 || true
+      ;;
+  esac
+fi
 
 # ── Read hooks path from generated config (if hooks enabled) ─────────────────
 HOOKS_PATH=""
@@ -353,7 +449,7 @@ server {
     location /browser/ {
         ${AUTH_BLOCK}
 
-        proxy_pass http://browser:3000/;
+        proxy_pass ${BROWSER_WEB_URL:-http://browser:3000}/;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -383,6 +479,13 @@ echo "[entrypoint] starting openclaw gateway on port $GATEWAY_PORT..."
 # cwd must be the app root so the gateway finds dist/control-ui/ assets
 # "gateway run" = foreground mode; all config comes from openclaw.json
 cd /opt/openclaw/app
-echo "[entrypoint] final config validation (openclaw doctor --fix)..."
-openclaw doctor --fix 2>&1 || true
+case "${OPENCLAW_SKIP_DOCTOR:-false}" in
+  1|true|yes|on|TRUE|YES|ON)
+    echo "[entrypoint] OPENCLAW_SKIP_DOCTOR set; skipping final doctor --fix"
+    ;;
+  *)
+    echo "[entrypoint] final config validation (openclaw doctor --fix)..."
+    openclaw doctor --fix 2>&1 || true
+    ;;
+esac
 exec openclaw gateway run

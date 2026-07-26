@@ -635,13 +635,21 @@ if (process.env.BROWSER_CDP_URL) {
 }
 
 // ── Web search (SearXNG) ─────────────────────────────────────────────────────
+// Write the modern plugin-owned path. The legacy tools.web.search.searxng shape
+// is rejected by gateway startup ("legacy web_search provider config must use
+// plugins.entries.<plugin>.config.webSearch"). Keep tools.web.search.provider
+// as a pointer only.
 if (process.env.SEARXNG_BASE_URL) {
-  console.log("[configure] configuring web search provider: searxng (from env)");
+  console.log("[configure] configuring web search provider: searxng (from env, plugin path)");
   ensure(config, "tools", "web", "search");
-  const search = config.tools.web.search;
-  ensure(search, "searxng");
-  search.provider = "searxng";
-  search.searxng.baseUrl = process.env.SEARXNG_BASE_URL;
+  config.tools.web.search.provider = "searxng";
+  // Drop any legacy nested searxng block left in persisted state.
+  if (config.tools.web.search.searxng) {
+    delete config.tools.web.search.searxng;
+  }
+  ensure(config, "plugins", "entries", "searxng", "config", "webSearch");
+  config.plugins.entries.searxng.enabled = true;
+  config.plugins.entries.searxng.config.webSearch.baseUrl = process.env.SEARXNG_BASE_URL;
 }
 
 // ── Sanitize stale web search config keys from persisted state ───────────────
